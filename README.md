@@ -1,4 +1,4 @@
-#list_files.py
+# list_files.py
 
 > A multithreaded, fast and efficient way of recursively processing a large number of files and directories in Python.
 
