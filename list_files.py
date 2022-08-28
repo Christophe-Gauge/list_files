@@ -3,8 +3,9 @@
 
 '''
 Recursively gather a list of files and directories for a given path
+and processes files as needed.
 
-Source: https://github.com/Christophe-Gauge/Google-Calendar
+Source: https://github.com/Christophe-Gauge/list_files
 '''
 
 # I M P O R T S ###############################################################
@@ -26,7 +27,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import re
 
-__author__ = "Christophe Gauge"
+__author__ = "Videre Research, LLC."
 __version__ = "1.0.5"
 __license__ = "GNU General Public License v3.0"
 
@@ -35,17 +36,13 @@ __license__ = "GNU General Public License v3.0"
 
 
 # Format is <current uid>: <new uid>
-uid_to_change = {1001: 34273, 1002: 34313, 502: 34313, 501: 34273}
-gid_to_change = {101: 10101, 100: 10045, 500: 10101, 501: 10045}
-# oracle   1001 -> 34273
-# applmgr  1002 -> 34313
-# oaa       101 -> 10101
-# dba       100  -> 10045
+uid_to_change = {1001: 34273, 1002: 34313}
+gid_to_change = {101: 10101, 100: 10045}
+# user1 UID   1001 -> 34273
+# user2 UID   1002 -> 34313
+# group1 GID   101 -> 10101
+# group2 GUD   100 -> 10045
 
-# oracle:x:1001:100:Oracle DBA,,,:/oracle/dba:/bin/ksh
-# applmgr:x:1002:101:Oracle Apple Guy,,,:/oracle/apps:/bin/ksh
-# dba::100:applmgr
-# oaa::101:oracle
 directories_to_exclude = ['.snapshot']
 files_to_exclude = ['.DS_Store']
 
@@ -110,8 +107,6 @@ def display_time(seconds, granularity=2):
 def handler_stop_signals(signum, frame):
     """Handles the SIGTERM signal to stop script cleanly."""
     logger.info("Received %s signal, exiting." % signum)
-    # global run
-    # run = False
     sys.exit(0)
 
 
@@ -144,7 +139,6 @@ def ProcessFileThread(i, q):
     global before
     # global transfer_total
     is_done_processing = False
-    # while not q.empty() and not is_done_listing_files:
     while not is_done_processing:
         if q.empty():
             if is_done_listing_files:
@@ -185,10 +179,11 @@ def ProcessFileThread(i, q):
                         name_extension = os.path.splitext(full_file_name)
                         short_file_name = name_extension[0]
                         file_extension = name_extension[1]
+                        # Just removing dashes from the file name, adjust as needed
                         new_file_name = short_file_name.replace(' - ', '').strip()
                         if new_file_name != '' and short_file_name != new_file_name:
                             new_file_name += file_extension
-                            logger.info(f'File: {item} -> {new_file_name}')
+                            logger.info(f'File renamed: {item} -> {new_file_name}')
                             os.rename(item, os.path.join(file_path, new_file_name))
                             with threadLock:
                                 number_of_files_modified += 1
@@ -322,8 +317,8 @@ def main():
 
     logger.info('Recursively processing files in %s' % (base_path))
     logger.info('Will create %s threads' % (num_threads))
-    logger.info('UID change list: %s' % (str(uid_to_change)))
-    logger.info('GID change list: %s' % (str(gid_to_change)))
+    # logger.info('UID change list: %s' % (str(uid_to_change)))
+    # logger.info('GID change list: %s' % (str(gid_to_change)))
     try:
         user = os.getlogin()
     except OSError as e:
@@ -342,7 +337,6 @@ def main():
     worker.start()
 
     time.sleep(1)
-    # dirlist(file_queue, base_path)
 
     for i in range(num_threads):
         worker = threading.Thread(target=ProcessFileThread, args=(i + 1, file_queue,))
