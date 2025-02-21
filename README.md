@@ -1,5 +1,9 @@
 # list_files.py
 
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL_v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+![pypi](https://img.shields.io/pypi/v/pybadges.svg)
+![versions](https://img.shields.io/pypi/pyversions/pybadges.svg)
+
 > A multithreaded, fast and efficient way of recursively processing a large number of files and directories in Python.
 
 This efficient script leverages multithreading and the use of a queue to store a list of work to be done. One thread recursively parses the filesystem to get a list of files and folders to be processed and populates that information in a queue. Additional threads wait for the queue to be populated with information and process each file and directory as needed. This allows for the processing of the files to start without having to wait for the full list of files to be complete, resulting in faster processing time.
